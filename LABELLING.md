@@ -13,6 +13,9 @@ Label what the posting **says**, not what you guess the company means.
 - `onsite`: the job is at a site.
 - `-` (empty): the posting doesn't say.
 
+Unlisted marks some jobs remote from the job board's own data, which the text may not
+repeat. Label the text: if it never says, workplace is empty.
+
 "Remote-first, with an office in Berlin you can use" is `remote`. "Remote, but you must
 come in once a quarter" is still `remote`. "Two days a week in the office" is `hybrid`.
 
@@ -29,7 +32,8 @@ Where you can live and still be hired.
 
 Time zones: "must overlap 4 hours with US Eastern" is a working-hours rule, not a place
 rule. If that's the only thing said, it's `unstated`. If it says "based in a US time zone",
-that's `country`.
+that's `country`. A location field that is itself a time zone ("Remote - Europe Time
+Zones", "Location: Central time zone") is a place rule: label the place.
 
 When the location field and the text disagree, the narrower one wins ("Remote" in the
 location field, "must reside in Canada" in the text: `country`).
@@ -45,7 +49,10 @@ From the title first, then the text.
 - `lead`: staff, principal, lead, architect (an individual contributor above senior).
 - `manager`: manages people: engineering manager, director, head of, VP.
 
-A "Lead" who the text says manages a team is `manager`.
+A "Lead" who the text says manages a team is `manager`. The reverse holds too: a "Manager"
+or "Director" title that is really an individual role (product manager, account manager,
+field marketing manager, account director owning a book of business) is `mid`, or
+`senior` when the title says senior, unless the text says they manage people.
 
 ## exp min / exp max
 
