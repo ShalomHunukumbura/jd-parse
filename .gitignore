@@ -1,0 +1,18 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+dist/
+*.tmp
+
+# API keys.
+.env
+
+# Job descriptions are other companies' text. Labels and scores are ours.
+data/postings.jsonl
+data/runs/
+
+# The explainer stays local.
+explain.md
+explain.pdf

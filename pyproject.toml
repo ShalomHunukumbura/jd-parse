@@ -1,0 +1,30 @@
+[project]
+name = "jd-parse"
+version = "0.1.0"
+description = "Turn job descriptions into structured fields with an LLM, measured against hand labels and hand-written rules."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = ["httpx>=0.27", "pydantic>=2.7", "psycopg[binary]>=3.2"]
+
+[project.scripts]
+jd-parse = "jd_parse.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/jd_parse"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
