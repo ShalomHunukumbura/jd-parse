@@ -4,6 +4,10 @@ Each field starts filled in with what Unlisted's rules said, so most answers are
 Labels are saved after every posting, so you can stop with `q` and carry on later.
 Read LABELLING.md first: it says what each value means, and that's what makes 100 labels
 consistent enough to score against.
+
+`--review` is for labels drafted by a model (`"by": "claude"`). It shows only the ones the
+drafter flagged as unsure, plus a fixed random set marked `audit`. How many audit labels a
+person leaves unchanged is the measure of how far the drafts can be trusted.
 """
 
 from __future__ import annotations
@@ -196,14 +200,47 @@ def save_labels(path: Path, labels: dict[int, dict]) -> None:
     tmp.replace(path)
 
 
-def run(postings: list[dict], labels_path: Path, relabel: bool = False, ask=input) -> None:
+def needs_review(row: dict) -> bool:
+    return row.get("by") == "claude" and (row.get("review") or row.get("audit"))
+
+
+def agreement(labels: dict[int, dict]) -> str:
+    """Of the audit labels a person has checked, how many they left as drafted."""
+    checked = [r for r in labels.values() if r.get("audit") and r.get("by") == "claude+human"]
+    if not checked:
+        return "no audit labels checked yet"
+    same = sum(not r["changed"] for r in checked)
+    return (
+        f"audit: {same} of {len(checked)} drafted labels kept unchanged ({same / len(checked):.0%})"
+    )
+
+
+def run(
+    postings: list[dict],
+    labels_path: Path,
+    relabel: bool = False,
+    review: bool = False,
+    ask=input,
+) -> None:
     labels = load_labels(labels_path)
-    todo = [p for p in postings if relabel or p["id"] not in labels]
-    print(f"{len(labels)} labelled, {len(todo)} to go. Enter keeps a value, - clears it.")
-    print("At the first prompt: t = full text, s = skip, q = quit.")
+    if review:
+        todo = [p for p in postings if needs_review(labels.get(p["id"], {}))]
+        print(f"{len(todo)} drafted labels to check. Values in [brackets] are the draft.")
+    else:
+        todo = [p for p in postings if relabel or p["id"] not in labels]
+        print(f"{len(labels)} labelled, {len(todo)} to go. Enter keeps a value, - clears it.")
+        print("Values in [brackets] are the rules' guess: Enter keeps one, type to change it.")
     for n, posting in enumerate(todo, 1):
         show(posting, f"[{n}/{len(todo)}]")
-        command = ask("  Enter to label, t/s/q: ").strip().lower()
+        old = labels.get(posting["id"], {})
+        if review:
+            reason = old.get("note") or "random check"
+            print(f"  why you're seeing this: {reason}")
+        command = (
+            ask("  Enter = label it, t = read full text first, s = skip, q = save and quit: ")
+            .strip()
+            .lower()
+        )
         if command == "t":
             pydoc.pager(posting["text"])
         elif command == "s":
@@ -219,6 +256,18 @@ def run(postings: list[dict], labels_path: Path, relabel: bool = False, ask=inpu
             print(f"  not saved: {error.errors()[0]['msg']}")
             continue
         note = ask("  note (optional): ").strip()
-        labels[posting["id"]] = {"id": posting["id"], "fields": fields, "note": note}
+        if review:
+            labels[posting["id"]] = {
+                **old,
+                "fields": fields,
+                "note": note or old.get("note", ""),
+                "by": "claude+human",
+                "review": False,
+                "changed": fields != old["fields"],
+            }
+        else:
+            labels[posting["id"]] = {"id": posting["id"], "fields": fields, "note": note}
         save_labels(labels_path, labels)
     print(f"{len(labels)} labelled. Saved to {labels_path}.")
+    if review:
+        print(agreement(labels))

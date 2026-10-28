@@ -95,3 +95,37 @@ def test_run_saves_after_each_posting_and_resumes(tmp_path):
 
     label.run(postings, path, ask=scripted("", "", "", "", "", "", "", "", ""))
     assert len(path.read_text().splitlines()) == 2
+
+
+def test_review_shows_only_flagged_and_audit_drafts_and_measures_agreement(tmp_path):
+    path = tmp_path / "labels.jsonl"
+    postings = [
+        {
+            "id": i,
+            "split": "dev",
+            "title": "T",
+            "company": "C",
+            "location": None,
+            "text": "Remote",
+            "rules": RULES,
+        }
+        for i in (1, 2, 3)
+    ]
+    drafts = {
+        1: {"id": 1, "fields": RULES, "note": "unsure", "by": "claude", "review": True},
+        2: {"id": 2, "fields": RULES, "note": "", "by": "claude", "review": False, "audit": True},
+        3: {"id": 3, "fields": RULES, "note": "", "by": "claude", "review": False},
+    }
+    label.save_labels(path, drafts)
+    # Posting 1: change seniority. Posting 2 (audit): keep everything.
+    label.run(
+        postings,
+        path,
+        review=True,
+        ask=scripted("", "", "", "sen", "", "", "", "", "", *[""] * 9),
+    )
+    saved = label.load_labels(path)
+    assert saved[1]["changed"] and saved[1]["note"] == "unsure"
+    assert not saved[2]["changed"] and saved[2]["by"] == "claude+human"
+    assert saved[3]["by"] == "claude"
+    assert label.agreement(saved).startswith("audit: 1 of 1")
