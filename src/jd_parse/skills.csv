@@ -1,0 +1,86 @@
+skill,category,pattern,case_sensitive
+Python,language,\bPython\b,false
+SQL,language,\bSQL\b,true
+JavaScript,language,\bJavaScript\b|\bJS\b,false
+TypeScript,language,\bTypeScript\b,false
+Java,language,\bJava\b(?!\s*Script),false
+Go,language,"\bGolang\b|\bGo\s*(?:\(Golang\)|programming|language)|(?:Python|Java|Rust|Ruby|Kotlin|Scala|C\+\+|Node(?:\.js)?)\s*(?:,|/|or|and)\s*Go\b|\bGo\s*(?:,|/|or|and)\s*(?:Python|Java|Rust|Ruby|Kotlin|Scala|C\+\+|Node)",true
+Rust,language,\bRust\b,true
+C++,language,C\+\+,false
+C#,language,C#|\.NET\b,false
+Ruby,language,\bRuby\b,false
+PHP,language,\bPHP\b,false
+Kotlin,language,\bKotlin\b,false
+Swift,language,\bSwift(?:UI)?\b,true
+Scala,language,\bScala\b,true
+R,language,"\bR\s*(?:,|/)\s*(?:Python|SQL|Stata|SAS)\b|(?:Python|SQL|SAS|Stata)\s*(?:,|/|or|and)\s*R\b|\bRStudio\b",true
+React,frontend,\bReact(?:\.js|JS)?\b,true
+Vue,frontend,\bVue(?:\.js)?\b,true
+Angular,frontend,\bAngular(?:JS)?\b,true
+Svelte,frontend,\bSvelte(?:Kit)?\b,false
+Next.js,frontend,\bNext\.js\b|\bNextJS\b,false
+Tailwind,frontend,\bTailwind\b,false
+Node.js,backend,\bNode(?:\.js|JS)\b,false
+Django,backend,\bDjango\b,false
+FastAPI,backend,\bFastAPI\b,false
+Flask,backend,\bFlask\b,true
+Rails,backend,\bRuby on Rails\b|\bRails\b,true
+Spring,backend,\bSpring Boot\b|\bSpring Framework\b,false
+GraphQL,backend,\bGraphQL\b,false
+gRPC,backend,\bgRPC\b,false
+PostgreSQL,database,\bPostgre(?:SQL|s)\b,false
+MySQL,database,\bMySQL\b,false
+MongoDB,database,\bMongo(?:DB)?\b,false
+Redis,database,\bRedis\b,false
+Elasticsearch,database,\bElastic(?:search| Search)\b|\bOpenSearch\b,false
+DynamoDB,database,\bDynamoDB\b,false
+Cassandra,database,\bCassandra\b,false
+AWS,cloud,\bAWS\b|\bAmazon Web Services\b,false
+GCP,cloud,\bGCP\b|\bGoogle Cloud\b,false
+Azure,cloud,\bAzure\b,false
+Docker,devops,\bDocker\b,false
+Kubernetes,devops,\bKubernetes\b|\bK8s\b,false
+Terraform,devops,\bTerraform\b,false
+CI/CD,devops,\bCI\s*/\s*CD\b|\bcontinuous (?:integration|delivery|deployment)\b,false
+GitHub Actions,devops,\bGitHub Actions\b,false
+Jenkins,devops,\bJenkins\b,false
+Linux,devops,\bLinux\b,false
+Datadog,devops,\bDatadog\b,false
+Prometheus,devops,\bPrometheus\b,false
+Grafana,devops,\bGrafana\b,false
+OpenTelemetry,devops,\bOpenTelemetry\b,false
+Spark,data,\bApache Spark\b|\bPySpark\b|\bSpark\b,true
+Kafka,data,\bKafka\b,false
+Airflow,data,\bAirflow\b,false
+dbt,data,\bdbt\b,true
+Snowflake,data,\bSnowflake\b,true
+BigQuery,data,\bBigQuery\b,false
+Redshift,data,\bRedshift\b,false
+Databricks,data,\bDatabricks\b,false
+Pandas,data,\bpandas\b,false
+Tableau,analytics,\bTableau\b,false
+Power BI,analytics,\bPower\s?BI\b,false
+Looker,analytics,\bLooker\b,false
+Excel,analytics,\bExcel\b,true
+Machine learning,ai,\bmachine learning\b|\bML\b,false
+Deep learning,ai,\bdeep learning\b,false
+LLMs,ai,\bLLMs?\b|\blarge language models?\b,false
+RAG,ai,\bRAG\b|\bretrieval[- ]augmented\b,true
+PyTorch,ai,\bPyTorch\b,false
+TensorFlow,ai,\bTensorFlow\b,false
+scikit-learn,ai,\bscikit[- ]learn\b|\bsklearn\b,false
+LangChain,ai,\bLangChain\b|\bLangGraph\b,false
+NLP,ai,\bNLP\b|\bnatural language processing\b,false
+Computer vision,ai,\bcomputer vision\b,false
+iOS,mobile,\biOS\b,true
+Android,mobile,\bAndroid\b,false
+React Native,mobile,\bReact Native\b,false
+Flutter,mobile,\bFlutter\b,true
+Playwright,testing,\bPlaywright\b,false
+Cypress,testing,\bCypress\b,true
+Selenium,testing,\bSelenium\b,false
+Figma,design,\bFigma\b,false
+Salesforce,business,\bSalesforce\b,false
+HubSpot,business,\bHubSpot\b,false
+SAP,business,\bSAP\b,true
+Jira,business,\bJira\b,false
