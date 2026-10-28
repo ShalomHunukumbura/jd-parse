@@ -9,7 +9,7 @@ from pathlib import Path
 
 from . import extract, label, score
 from .providers import make_provider
-from .sample import draw, read_jsonl, write_postings
+from .sample import BUCKETS, draw, read_jsonl, write_postings
 
 DATA = Path("data")
 POSTINGS = DATA / "postings.jsonl"
@@ -40,7 +40,8 @@ def cmd_sample(args: argparse.Namespace) -> None:
         raise SystemExit("set UNLISTED_DATABASE_URL to Unlisted's Postgres (see .env.example)")
     if POSTINGS.exists() and not args.force:
         raise SystemExit(f"{POSTINGS} exists; --force replaces it (labels are kept)")
-    postings = draw(url, args.per_bucket, args.test_share, args.seed)
+    sizes = {b: round(n * args.scale) for b, n in BUCKETS.items()}
+    postings = draw(url, sizes, args.test_share, args.seed)
     write_postings(POSTINGS, postings)
     by_bucket: dict[str, int] = {}
     for p in postings:
@@ -50,7 +51,7 @@ def cmd_sample(args: argparse.Namespace) -> None:
 
 
 def cmd_label(args: argparse.Namespace) -> None:
-    label.run(postings_in(args.split), LABELS, relabel=args.relabel)
+    label.run(postings_in(args.split), LABELS, relabel=args.relabel, review=args.review)
 
 
 def cmd_extract(args: argparse.Namespace) -> None:
@@ -83,7 +84,7 @@ def main(argv: list[str] | None = None) -> None:
     sub = parser.add_subparsers(dest="command", required=True)
 
     p = sub.add_parser("sample", help="draw postings to label from Unlisted's database")
-    p.add_argument("--per-bucket", type=int, default=20)
+    p.add_argument("--scale", type=float, default=1.0, help="0.5 draws half as many")
     p.add_argument("--test-share", type=float, default=0.3)
     p.add_argument("--seed", default="jd-parse-1")
     p.add_argument("--force", action="store_true")
@@ -92,6 +93,7 @@ def main(argv: list[str] | None = None) -> None:
     p = sub.add_parser("label", help="hand-label postings in the terminal")
     p.add_argument("--split", choices=["dev", "test", "all"], default="all")
     p.add_argument("--relabel", action="store_true", help="go over labelled postings again")
+    p.add_argument("--review", action="store_true", help="check model-drafted labels")
     p.set_defaults(func=cmd_label)
 
     p = sub.add_parser("extract", help="run a prompt and model over the postings")

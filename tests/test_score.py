@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from jd_parse.sample import rule_fields
+from jd_parse.sample import held_out_ids, rule_fields
 from jd_parse.schema import JobFields
 from jd_parse.score import score_run, table
 
@@ -62,3 +62,11 @@ def test_rule_fields_translate_unlisted_columns():
 
     onsite = rule_fields(dict(row, remote=False, open_to="country"), "")
     assert onsite.workplace is None and onsite.open_to is None
+
+
+def test_test_split_takes_the_same_share_of_every_group():
+    rows = [{"id": i, "bucket": "anywhere"} for i in range(40)]
+    rows += [{"id": 100 + i, "bucket": "region"} for i in range(20)]
+    held = held_out_ids(rows, 0.3, "seed")
+    assert sum(i < 100 for i in held) == 12 and sum(i >= 100 for i in held) == 6
+    assert held == held_out_ids(rows, 0.3, "seed")

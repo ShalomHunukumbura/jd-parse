@@ -5,8 +5,13 @@ percent of remote jobs say they are open worldwide, and a plain random 100 would
 or three of them. Each company appears once, so one big employer's template can't fill
 the set. The draw is seeded, so the same database gives the same sample.
 
-Every posting gets a split. `dev` is what prompts are tuned on. `test` is scored once at
-the end; tuning on it would make the final number look better than it is.
+`anywhere` gets twice the share. Unlisted never leaves a remote job's scope empty: a bare
+"Remote" is stored as anywhere, so that group mixes real worldwide jobs with ones that
+just don't say, and it's where the rules are most likely wrong.
+
+Every posting gets a split, 70/30 inside each group. `dev` is what prompts are tuned on.
+`test` is scored once at the end; tuning on it would make the final number look better
+than it is.
 """
 
 from __future__ import annotations
@@ -21,7 +26,8 @@ from psycopg.rows import dict_row
 from .schema import JobFields, OpenTo, Pay, Workplace
 from .skills import find_skills, html_to_text
 
-BUCKETS = ("anywhere", "region", "country", "remote-unknown", "not-remote")
+# How many postings to draw from each group, by default 100 in all.
+BUCKETS = {"anywhere": 40, "region": 20, "country": 20, "not-remote": 20}
 
 QUERY = """
 WITH open_jobs AS (
@@ -40,7 +46,8 @@ ranked AS (
 )
 SELECT id, title, company, location_raw, remote, open_to, comp_min, comp_max,
        comp_currency, comp_period, exp_min_years, exp_max_years, description_html, bucket
-FROM ranked WHERE per_bucket <= %(per_bucket)s
+FROM ranked
+WHERE per_bucket <= coalesce((%(sizes)s::jsonb ->> bucket)::int, 0)
 ORDER BY bucket, id
 """
 
@@ -69,19 +76,19 @@ def rule_fields(row: dict, text: str) -> JobFields:
     )
 
 
-def draw(url: str, per_bucket: int, test_share: float, seed: str) -> list[dict]:
+def draw(url: str, sizes: dict[str, int], test_share: float, seed: str) -> list[dict]:
     with psycopg.connect(url, row_factory=dict_row) as conn:
         conn.read_only = True
-        rows = conn.execute(QUERY, {"seed": seed, "per_bucket": per_bucket}).fetchall()
+        rows = conn.execute(QUERY, {"seed": seed, "sizes": json.dumps(sizes)}).fetchall()
 
-    rng = random.Random(seed)
+    tests = held_out_ids(rows, test_share, seed)
     postings = []
     for row in rows:
         text = html_to_text(row["description_html"])
         postings.append(
             {
                 "id": row["id"],
-                "split": "test" if rng.random() < test_share else "dev",
+                "split": "test" if row["id"] in tests else "dev",
                 "bucket": row["bucket"],
                 "title": row["title"],
                 "company": row["company"],
@@ -91,6 +98,18 @@ def draw(url: str, per_bucket: int, test_share: float, seed: str) -> list[dict]:
             }
         )
     return postings
+
+
+def held_out_ids(rows: list[dict], share: float, seed: str) -> set[int]:
+    """The ids held out for testing: the same share of every group, chosen at random."""
+    rng = random.Random(seed)
+    by_bucket: dict[str, list[int]] = {}
+    for row in rows:
+        by_bucket.setdefault(row["bucket"], []).append(row["id"])
+    held = set()
+    for ids in by_bucket.values():
+        held |= set(rng.sample(sorted(ids), round(len(ids) * share)))
+    return held
 
 
 def write_postings(path: Path, postings: list[dict]) -> None:
