@@ -111,6 +111,12 @@ class OpenAICompatible:
             if response.status_code == 429 or response.status_code >= 500:
                 time.sleep(_wait_seconds(response, attempt))
                 continue
+            if response.status_code == 400 and "json_validate_failed" in response.text:
+                # The model answered, but not with JSON matching the schema. That's the
+                # model's failure, not the service's: hand back what it wrote (often
+                # nothing) so validation fails and the caller's correction retry runs.
+                error = response.json()["error"]
+                return Reply(error.get("failed_generation") or "", 0, 0)
             if (
                 response.status_code == 400
                 and self.schema_mode
@@ -118,7 +124,8 @@ class OpenAICompatible:
             ):
                 self.schema_mode = False
                 continue
-            response.raise_for_status()
+            if response.is_error:
+                raise RuntimeError(f"{self.name} {response.status_code}: {response.text[:500]}")
             body = response.json()
             usage = body.get("usage") or {}
             return Reply(

@@ -82,3 +82,20 @@ def test_llm_schema_limits_skills_and_has_no_refs():
     schema = inline_refs(llm_json_schema())
     assert "Python" in schema["properties"]["skills"]["items"]["enum"]
     assert "$ref" not in str(schema) and "$defs" not in schema
+
+
+def test_schema_validation_failure_comes_back_as_the_models_answer():
+    def handler(request):
+        error = {"code": "json_validate_failed", "failed_generation": ""}
+        return httpx.Response(400, json={"error": error})
+
+    reply = OpenAICompatible("groq", "m", client=client(handler)).complete(MESSAGES, SCHEMA)
+    assert reply.text == ""
+
+
+def test_other_errors_keep_the_response_body():
+    def handler(request):
+        return httpx.Response(401, text="invalid api key")
+
+    with pytest.raises(RuntimeError, match="groq 401: invalid api key"):
+        OpenAICompatible("groq", "m", client=client(handler)).complete(MESSAGES, SCHEMA)

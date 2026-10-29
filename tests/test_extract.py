@@ -69,3 +69,22 @@ def test_run_resumes_and_refuses_an_edited_prompt(tmp_path):
     prompt.write_text("Extract better.\n{skills}")
     with pytest.raises(SystemExit, match="changed"):
         extract.run(Fake(GOOD), prompt, [POSTING], tmp_path / "runs", None)
+
+
+class Down(Fake):
+    def complete(self, messages, schema):
+        raise RuntimeError("fake 429: rate limit")
+
+
+def test_resume_retries_failed_calls_but_not_invalid_answers(tmp_path):
+    prompt = tmp_path / "v1.md"
+    prompt.write_text("Extract.\n{skills}")
+    invalid = dict(POSTING, id=2)
+
+    folder = extract.run(Down(), prompt, [POSTING], tmp_path / "runs", None)
+    extract.run(Fake("not json", "still not"), prompt, [invalid], tmp_path / "runs", None)
+    provider = Fake(GOOD)
+    extract.run(provider, prompt, [POSTING, invalid], tmp_path / "runs", None)
+    assert len(provider.calls) == 1
+    rows = [json.loads(line) for line in (folder / "predictions.jsonl").open()]
+    assert [(r["id"], r["error"] is None) for r in rows] == [(1, False), (2, False), (1, True)]

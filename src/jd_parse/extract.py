@@ -114,9 +114,12 @@ def run(
     meta_path.write_text(json.dumps(meta, indent=2) + "\n")
 
     predictions = folder / "predictions.jsonl"
-    done = set()
+    # A call that failed (rate limit, server error) says nothing about the model, so a
+    # resumed run tries it again. The new row is appended; scoring keeps the last one.
+    latest = {}
     if predictions.exists():
-        done = {json.loads(line)["id"] for line in predictions.open() if line.strip()}
+        latest = {row["id"]: row for row in map(json.loads, predictions.open())}
+    done = {i for i, row in latest.items() if not (row["error"] or "").startswith("call failed")}
     todo = [p for p in postings if p["id"] not in done][:limit]
     print(f"{folder.name}: {len(done)} done, {len(todo)} to run")
 
