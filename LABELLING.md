@@ -19,6 +19,8 @@ repeat. Label the text: if it never says, workplace is empty.
 "Remote-first, with an office in Berlin you can use" is `remote`. "Remote, but you must
 come in once a quarter" is still `remote`. "Two days a week in the office" is `hybrid`.
 
+A city in the location field doesn't make a job `onsite`; the text has to say so.
+
 ## open_to (remote jobs only)
 
 Where you can live and still be hired.
@@ -35,6 +37,9 @@ rule. If that's the only thing said, it's `unstated`. If it says "based in a US 
 that's `country`. A location field that is itself a time zone ("Remote - Europe Time
 Zones", "Location: Central time zone") is a place rule: label the place.
 
+The location field counts: a remote job listed as "Gilbert, Arizona" is `country`, one
+listed as "North America - Remote" is `region`.
+
 When the location field and the text disagree, the narrower one wins ("Remote" in the
 location field, "must reside in Canada" in the text: `country`).
 
@@ -45,6 +50,8 @@ From the title first, then the text.
 - `intern`: intern, trainee, placement.
 - `junior`: junior, associate, graduate, entry level, "I" in a ladder (Engineer I).
 - `mid`: no level word and nothing in the text pointing up or down. Also "II".
+- Director, Head of and VP are `manager` even with "Senior" in front. A title with two
+  levels ("Senior/Staff") takes the lower one.
 - `senior`: senior, "III".
 - `lead`: staff, principal, lead, architect (an individual contributor above senior).
 - `manager`: manages people: engineering manager, director, head of, VP.
@@ -74,7 +81,15 @@ Base pay, as stated. Written as `min-max CUR period`, e.g. `120000-150000 USD ye
   write a note.
 - Only one number ("up to $90k"): `-90000 USD year`. ("from $90k": `90000- USD year`.)
 - Hourly and monthly stay as stated: `40-55 USD hour`.
+- Period not written ("$55—$60 USD"): under 500 is `hour`, 500 to 20,000 is `month`,
+  above is `year`.
+- A bare `$` is USD, unless the job is in Canada (CAD), Australia (AUD) or another dollar
+  country.
 - No pay stated: `-`.
+
+As with workplace, label the text only. Unlisted takes pay from Ashby's and Lever's
+structured pay field when there is one, so the pre-filled pay can be a range the text never
+mentions. If the text doesn't state it, pay is `-`.
 
 ## skills
 
